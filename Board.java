@@ -34,13 +34,31 @@ public class Board {
         return this.turn;
     }
 
-    public boolean canMoveTo(int fromX, int fromY, int toX, int toY) {
+    public boolean canMoveTo(Piece piece, int fromX, int fromY, int toX, int toY) {
         Piece occupying = this.getPieceAt(toX, toY);
 
-        int distanceX = Math.abs(fromX - toX);
-        int distanceY = Math.abs(fromY - toY);
+        if (occupying != null) {
+            return false;
+        }
 
-        return occupying == null && (distanceX == 1 && distanceY == 1);
+        if (piece.getColor() == 0 && !piece.isKing()) {
+            int distanceX = fromX - toX;
+            int distanceY = fromY - toY;
+
+            System.out.println(distanceX + "  " + distanceY);
+
+            return (distanceX == -1 && distanceY == -1) || (distanceX == 1 && distanceY == -1);
+        } else if (piece.getColor() == 1 && !piece.isKing()) {
+            int distanceX = fromX - toX;
+            int distanceY = fromY - toY;
+
+            return (distanceX == 1 && distanceY == 1) || (distanceX == -1 && distanceY == 1);
+        } else {
+            int distanceX = Math.abs(fromX - toX);
+            int distanceY = Math.abs(fromY - toY);
+
+            return distanceX == 1 && distanceY == 1;
+        }
     }
 
     public ArrayList<Move> calculatePossibleJumps(int x, int y) {
@@ -54,7 +72,7 @@ public class Board {
 
             for (int y2 = 0; y2 < 8; y2++) {
                 for (int x2 = 0; x2 < 8; x2++) {
-                    positions.add(new Move(x2, y2, this.canMoveTo(x, y, x2, y2)));
+                    positions.add(new Move(x2, y2, this.canMoveTo(piece, x, y, x2, y2)));
                 }
             }
 
@@ -78,7 +96,7 @@ public class Board {
 
             for (int y2 = 0; y2 < 8; y2++) {
                 for (int x2 = 0; x2 < 8; x2++) {
-                    positions.add(new Move(x2, y2, this.canMoveTo(x, y, x2, y2)));
+                    positions.add(new Move(x2, y2, this.canMoveTo(piece, x, y, x2, y2)));
                 }
             }
 
