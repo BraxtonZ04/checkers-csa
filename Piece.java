@@ -9,11 +9,6 @@ public class Piece {
         this.isKing = false;
     }
 
-    public Piece(int color, boolean isKing) {
-        this.color = color;
-        this.isKing = isKing;
-    }
-
     public void setKing(boolean king) {
         this.isKing = king;
     }
