@@ -83,13 +83,11 @@ public class BoardRenderer extends JPanel {
         if (selectPiece) {
             this.selectedPiece = piece;
             this.selectedPieceX = coordinates[0];
-            this.selectedPieceY = coordinates[1]; // TODO
+            this.selectedPieceY = coordinates[1]; 
         }
 
         if (this.selectedPiece != null && piece == null) { // selected empty square
-            ArrayList<Move> moves = this.board.calculatePossibleMoves(this.selectedPieceX, this.selectedPieceY);
-            ArrayList<Move> jumps = this.board.calculatePossibleJumps(this.selectedPieceX, this.selectedPieceY);
-            moves.addAll(jumps);
+            ArrayList<Move> moves = this.board.getValidMoves(this.selectedPieceX, this.selectedPieceY);
 
             for (Move move : moves) {
                 if (move.getX3() == coordinates[0] && move.getY3() == coordinates[1] && move.canMove()){
@@ -98,11 +96,35 @@ public class BoardRenderer extends JPanel {
 
                     if (move.canCapturePiece()) {
                         this.board.setPieceAt(move.getX2(), move.getY2(), null);
+                        this.board.setLastJumpPiece(new AIPiece(move.getX3(), move.getY3(), this.selectedPiece.getColor()));
 
                         if (this.board.getTurn() == 0) {
                             this.board.setBlueTeamCaptured(this.board.getBlueTeamCaptured() + 1);
                         } else {
                             this.board.setRedTeamCaptured(this.board.getRedTeamCaptured() + 1);
+                        }
+
+                        //check if they can make another jump
+                        ArrayList<Move> moves1 = this.board.getValidMoves(move.getX3(), move.getY3());
+                        if (moves1.size() == 0) {
+                            this.board.setLastJumpPiece(null);
+                            this.board.switchTurn();
+                            System.out.println("No double jump available.");
+
+                            return;
+                        }
+
+                        Move move2 = moves1.get(0);
+                        for (Move move1 : moves1) {
+                            if (move1.canCapturePiece()) {
+                                move2 = move1;
+                            }
+                        }
+
+                        if (move2 != null && !move2.canCapturePiece() && this.board.getLastJumpPiece() != null) {
+                            this.board.setLastJumpPiece(null);
+                            this.board.switchTurn();
+                            System.out.println("No double jump available.");
                         }
                     } else {
                         this.board.switchTurn();
@@ -147,12 +169,24 @@ public class BoardRenderer extends JPanel {
                     }
 
                     graphics2D.fillOval(x * SLOT_SIZE + (PIECE_PADDING / 2), y * SLOT_SIZE + (PIECE_PADDING / 2), SLOT_SIZE - PIECE_PADDING, SLOT_SIZE - PIECE_PADDING);
+
+                    if (piece.isKing()) {
+                        graphics2D.setColor(Color.BLACK);
+
+                        graphics2D.drawString("K", x * SLOT_SIZE + (PIECE_PADDING / 2) + 20, y * SLOT_SIZE + (PIECE_PADDING / 2)  + 20);
+                    }
+
+                    if (piece == this.selectedPiece) {
+                        graphics2D.setColor(Color.YELLOW);
+                    } else if (piece.getColor() == 0) {
+                        graphics2D.setColor(Color.RED);
+                    } else if (piece.getColor() == 1) {
+                        graphics2D.setColor(Color.BLUE);
+                    }
                 }
 
                 if (this.selectedPiece != null) {
-                    ArrayList<Move> jumps = this.board.calculatePossibleJumps(this.selectedPieceX, this.selectedPieceY);
-                    ArrayList<Move> moves = this.board.calculatePossibleMoves(this.selectedPieceX, this.selectedPieceY);
-                    moves.addAll(jumps);
+                    ArrayList<Move> moves = this.board.getValidMoves(this.selectedPieceX, this.selectedPieceY);
 
                     for (Move move : moves) {
                         if (!move.canCapturePiece() && move.getX3() == x && move.getY3() == y && move.canMove()) { // not a jump move
